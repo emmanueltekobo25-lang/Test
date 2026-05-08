@@ -1,0 +1,649 @@
+
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap');
+
+  :root {
+    --accent: #6C5CE7;
+    --accent2: #00CEC9;
+    --bg: #0f0f14;
+    --surface: #16161f;
+    --surface2: #1e1e2a;
+    --text: #f0eff8;
+    --muted: #7c7a96;
+    --border: rgba(255,255,255,0.07);
+    --danger: #e17055;
+    --success: #00b894;
+  }
+
+  body { background: var(--bg); font-family: 'DM Sans', sans-serif; color: var(--text); }
+
+  #app {
+    max-width: 390px;
+    min-height: 750px;
+    margin: 0 auto;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 80px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(60px);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .orb1 { width: 200px; height: 200px; background: rgba(108,92,231,0.18); top: -60px; right: -50px; }
+  .orb2 { width: 150px; height: 150px; background: rgba(0,206,201,0.12); bottom: 100px; left: -40px; }
+
+  .header {
+    padding: 20px 20px 0;
+    position: relative; z-index: 1;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+
+  .greeting { font-size: 13px; color: var(--muted); letter-spacing: 0.04em; text-transform: uppercase; font-family: 'Space Mono', monospace; }
+  .date-label { font-size: 19px; font-weight: 500; margin-top: 2px; }
+
+  .ai-chip {
+    display: flex; align-items: center; gap: 6px;
+    background: rgba(108,92,231,0.15);
+    border: 0.5px solid rgba(108,92,231,0.4);
+    border-radius: 20px;
+    padding: 6px 12px;
+    font-size: 12px;
+    color: #a89ff8;
+    font-family: 'Space Mono', monospace;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .ai-chip:hover { background: rgba(108,92,231,0.25); }
+  .ai-dot { width: 6px; height: 6px; background: var(--accent2); border-radius: 50%; animation: pulse 1.8s infinite; }
+  @keyframes pulse { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:0.5; transform:scale(0.7); } }
+
+  .stats-row {
+    display: flex; gap: 10px;
+    padding: 18px 20px 0;
+    position: relative; z-index: 1;
+  }
+  .stat-card {
+    flex: 1;
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: 14px;
+    padding: 12px 14px;
+  }
+  .stat-val { font-size: 22px; font-weight: 600; font-family: 'Space Mono', monospace; }
+  .stat-val.done { color: var(--accent2); }
+  .stat-val.total { color: var(--accent); }
+  .stat-val.streak { color: #fd9644; }
+  .stat-lbl { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  .progress-bar-wrap { padding: 16px 20px 0; position: relative; z-index: 1; }
+  .progress-bar-track { background: var(--surface2); border-radius: 6px; height: 6px; overflow: hidden; }
+  .progress-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 6px; transition: width 0.6s ease; }
+  .progress-label { font-size: 12px; color: var(--muted); margin-top: 6px; font-family: 'Space Mono', monospace; }
+
+  .section-title {
+    padding: 18px 20px 10px;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    position: relative; z-index: 1;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .add-btn {
+    width: 26px; height: 26px;
+    background: rgba(108,92,231,0.2);
+    border: 0.5px solid rgba(108,92,231,0.4);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; color: #a89ff8; font-size: 18px; line-height: 1;
+    transition: background 0.2s;
+  }
+  .add-btn:hover { background: rgba(108,92,231,0.4); }
+
+  .task-list { padding: 0 20px; position: relative; z-index: 1; display: flex; flex-direction: column; gap: 8px; }
+
+  .task-item {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: 14px;
+    padding: 13px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+    animation: slideIn 0.3s ease;
+  }
+  @keyframes slideIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+  .task-item:hover { background: var(--surface2); transform: translateX(2px); }
+  .task-item.done-task { opacity: 0.5; }
+  .task-item.done-task .task-name { text-decoration: line-through; color: var(--muted); }
+
+  .task-check {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    border: 1.5px solid var(--muted);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 12px;
+  }
+  .task-check.checked { background: var(--success); border-color: var(--success); color: #fff; }
+
+  .task-info { flex: 1; min-width: 0; }
+  .task-name { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .task-meta { font-size: 12px; color: var(--muted); margin-top: 2px; display: flex; align-items: center; gap: 6px; }
+
+  .priority-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+  .p-high { background: var(--danger); }
+  .p-mid { background: #fd9644; }
+  .p-low { background: var(--success); }
+
+  .tag {
+    font-size: 10px; font-family: 'Space Mono', monospace;
+    background: rgba(108,92,231,0.15);
+    color: #a89ff8;
+    border-radius: 6px;
+    padding: 1px 6px;
+  }
+
+  .delete-btn { color: var(--muted); font-size: 16px; cursor: pointer; flex-shrink: 0; padding: 4px; transition: color 0.2s; }
+  .delete-btn:hover { color: var(--danger); }
+
+  .voice-zone {
+    position: fixed;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(100% - 32px);
+    max-width: 358px;
+    z-index: 100;
+  }
+
+  .voice-bar {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    padding: 10px 14px;
+    gap: 12px;
+  }
+
+  .mic-btn {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+    flex-shrink: 0;
+    position: relative;
+  }
+  .mic-btn:hover { background: #7d6df5; transform: scale(1.05); }
+  .mic-btn.listening { background: var(--danger); animation: micPulse 1s infinite; }
+  .mic-btn.loading { background: var(--accent2); }
+  @keyframes micPulse { 0%,100% { box-shadow: 0 0 0 0 rgba(225,112,85,0.5); } 50% { box-shadow: 0 0 0 10px rgba(225,112,85,0); } }
+
+  .mic-icon { font-size: 20px; color: #fff; }
+
+  .voice-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    placeholder-color: var(--muted);
+  }
+  .voice-input::placeholder { color: var(--muted); }
+
+  .send-btn {
+    width: 36px; height: 36px;
+    background: rgba(108,92,231,0.2);
+    border: 0.5px solid rgba(108,92,231,0.4);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    color: #a89ff8;
+    font-size: 16px;
+    transition: background 0.2s;
+    flex-shrink: 0;
+  }
+  .send-btn:hover { background: rgba(108,92,231,0.4); }
+
+  .ai-bubble {
+    margin: 0 20px 12px;
+    background: linear-gradient(135deg, rgba(108,92,231,0.15), rgba(0,206,201,0.08));
+    border: 0.5px solid rgba(108,92,231,0.3);
+    border-radius: 14px;
+    padding: 12px 14px;
+    font-size: 13px;
+    line-height: 1.5;
+    color: #c8c5f8;
+    position: relative; z-index: 1;
+    display: none;
+    animation: slideIn 0.3s ease;
+  }
+  .ai-bubble.visible { display: block; }
+  .ai-label { font-size: 10px; font-family: 'Space Mono', monospace; color: var(--accent2); margin-bottom: 4px; letter-spacing: 0.06em; }
+
+  .add-form {
+    margin: 0 20px 10px;
+    background: var(--surface2);
+    border: 0.5px solid rgba(108,92,231,0.3);
+    border-radius: 14px;
+    padding: 12px 14px;
+    display: none;
+    flex-direction: column;
+    gap: 10px;
+    position: relative; z-index: 1;
+    animation: slideIn 0.25s ease;
+  }
+  .add-form.visible { display: flex; }
+  .form-row { display: flex; gap: 8px; }
+  .form-input {
+    flex: 1; background: var(--surface); border: 0.5px solid var(--border);
+    border-radius: 10px; padding: 9px 12px; color: var(--text);
+    font-family: 'DM Sans', sans-serif; font-size: 13px; outline: none;
+  }
+  .form-input:focus { border-color: rgba(108,92,231,0.5); }
+  .form-select {
+    background: var(--surface); border: 0.5px solid var(--border);
+    border-radius: 10px; padding: 9px 10px; color: var(--text);
+    font-family: 'DM Sans', sans-serif; font-size: 12px; outline: none;
+    cursor: pointer;
+  }
+  .form-submit {
+    background: var(--accent); border: none; border-radius: 10px;
+    padding: 9px 16px; color: #fff; font-family: 'DM Sans', sans-serif;
+    font-size: 13px; font-weight: 500; cursor: pointer; transition: background 0.2s;
+  }
+  .form-submit:hover { background: #7d6df5; }
+
+  .listening-wave {
+    display: flex; align-items: center; gap: 3px;
+    height: 20px;
+  }
+  .wave-bar { width: 3px; border-radius: 2px; background: var(--danger); animation: wave 0.8s infinite; }
+  .wave-bar:nth-child(1) { animation-delay: 0s; }
+  .wave-bar:nth-child(2) { animation-delay: 0.1s; }
+  .wave-bar:nth-child(3) { animation-delay: 0.2s; }
+  .wave-bar:nth-child(4) { animation-delay: 0.3s; }
+  .wave-bar:nth-child(5) { animation-delay: 0.2s; }
+  @keyframes wave {
+    0%,100% { height: 4px; }
+    50% { height: 18px; }
+  }
+
+  .voice-hint { font-size: 11px; color: var(--muted); text-align: center; margin-top: 6px; font-family: 'Space Mono', monospace; }
+</style>
+
+<div id="app">
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+
+  <div class="header">
+    <div>
+      <div class="greeting" id="greeting-txt">Bonjour</div>
+      <div class="date-label" id="date-label">Chargement...</div>
+    </div>
+    <div class="ai-chip" onclick="askAISuggestion()">
+      <div class="ai-dot"></div>
+      IA
+    </div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-val done" id="done-count">0</div>
+      <div class="stat-lbl">faites</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val total" id="total-count">0</div>
+      <div class="stat-lbl">total</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val streak">🔥 0</div>
+      <div class="stat-lbl">série</div>
+    </div>
+  </div>
+
+  <div class="progress-bar-wrap">
+    <div class="progress-bar-track"><div class="progress-bar-fill" id="prog-fill" style="width:0%"></div></div>
+    <div class="progress-label" id="prog-label">0 / 0 tâches complétées</div>
+  </div>
+
+  <div class="section-title">
+    <span>Aujourd'hui</span>
+    <div class="add-btn" onclick="toggleForm()" title="Ajouter">+</div>
+  </div>
+
+  <div class="add-form" id="add-form">
+    <input class="form-input" id="new-task-name" placeholder="Nom de la tâche..." />
+    <div class="form-row">
+      <input class="form-input" id="new-task-time" placeholder="Heure (ex: 09h30)" style="flex:1.2"/>
+      <select class="form-select" id="new-task-priority">
+        <option value="high">🔴 Urgent</option>
+        <option value="mid" selected>🟠 Moyen</option>
+        <option value="low">🟢 Faible</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <input class="form-input" id="new-task-tag" placeholder="Étiquette (ex: Travail)" />
+      <button class="form-submit" onclick="addTaskFromForm()">Ajouter</button>
+    </div>
+  </div>
+
+  <div class="ai-bubble" id="ai-bubble">
+    <div class="ai-label">✦ Assistant IA</div>
+    <div id="ai-text"></div>
+  </div>
+
+  <div class="task-list" id="task-list"></div>
+
+  <div class="voice-zone">
+    <div class="voice-bar">
+      <button class="mic-btn" id="mic-btn" onclick="toggleVoice()" aria-label="Micro vocal">
+        <i class="ti ti-microphone mic-icon" id="mic-icon"></i>
+      </button>
+      <div id="voice-content" style="flex:1;overflow:hidden">
+        <input class="voice-input" id="voice-input" placeholder="Parlez ou tapez une commande..." />
+      </div>
+      <div class="send-btn" onclick="handleTextCommand()" title="Envoyer">
+        <i class="ti ti-arrow-up" aria-hidden="true"></i>
+      </div>
+    </div>
+    <div class="voice-hint" id="voice-hint">appuyez sur le micro — commandez en français</div>
+  </div>
+</div>
+
+<script>
+const TASKS_KEY = 'taskai_tasks_v1';
+const STREAK_KEY = 'taskai_streak';
+let tasks = [];
+let isListening = false;
+let recognition = null;
+let isLoadingAI = false;
+
+function saveTasks() {
+  try { window.storage && window.storage.set(TASKS_KEY, JSON.stringify(tasks)); } catch(e) {}
+  localStorage.setItem(TASKS_KEY, JSON.stringify(tasks));
+}
+
+function loadTasks() {
+  try {
+    const raw = localStorage.getItem(TASKS_KEY);
+    if (raw) tasks = JSON.parse(raw);
+  } catch(e) { tasks = []; }
+  if (!tasks.length) seedDefault();
+}
+
+function seedDefault() {
+  tasks = [
+    { id: 1, name: 'Réunion d\'équipe', time: '09h00', priority: 'high', tag: 'Travail', done: false },
+    { id: 2, name: 'Envoyer le rapport mensuel', time: '11h30', priority: 'high', tag: 'Travail', done: false },
+    { id: 3, name: 'Déjeuner avec Marie', time: '13h00', priority: 'low', tag: 'Personnel', done: true },
+    { id: 4, name: 'Réviser le budget Q3', time: '15h00', priority: 'mid', tag: 'Finance', done: false },
+    { id: 5, name: 'Sport — 30 min cardio', time: '18h00', priority: 'low', tag: 'Santé', done: false },
+  ];
+  saveTasks();
+}
+
+function render() {
+  const list = document.getElementById('task-list');
+  const done = tasks.filter(t => t.done).length;
+  const total = tasks.length;
+  document.getElementById('done-count').textContent = done;
+  document.getElementById('total-count').textContent = total;
+  const pct = total ? Math.round(done/total*100) : 0;
+  document.getElementById('prog-fill').style.width = pct + '%';
+  document.getElementById('prog-label').textContent = done + ' / ' + total + ' tâches complétées';
+
+  list.innerHTML = '';
+  const sorted = [...tasks].sort((a,b) => {
+    if (a.done !== b.done) return a.done ? 1 : -1;
+    const pmap = {high:0,mid:1,low:2};
+    return pmap[a.priority] - pmap[b.priority];
+  });
+  sorted.forEach(t => {
+    const el = document.createElement('div');
+    el.className = 'task-item' + (t.done ? ' done-task' : '');
+    const pclass = t.priority === 'high' ? 'p-high' : t.priority === 'mid' ? 'p-mid' : 'p-low';
+    el.innerHTML = `
+      <div class="task-check ${t.done?'checked':''}" onclick="toggleTask(${t.id})">
+        ${t.done ? '✓' : ''}
+      </div>
+      <div class="task-info">
+        <div class="task-name">${t.name}</div>
+        <div class="task-meta">
+          <span class="priority-dot ${pclass}"></span>
+          <i class="ti ti-clock" style="font-size:11px" aria-hidden="true"></i> ${t.time}
+          ${t.tag ? `<span class="tag">${t.tag}</span>` : ''}
+        </div>
+      </div>
+      <div class="delete-btn" onclick="deleteTask(${t.id})" aria-label="Supprimer">
+        <i class="ti ti-x" aria-hidden="true"></i>
+      </div>
+    `;
+    list.appendChild(el);
+  });
+}
+
+function toggleTask(id) {
+  const t = tasks.find(t => t.id === id);
+  if (t) { t.done = !t.done; saveTasks(); render(); }
+}
+
+function deleteTask(id) {
+  tasks = tasks.filter(t => t.id !== id);
+  saveTasks(); render();
+}
+
+function toggleForm() {
+  const f = document.getElementById('add-form');
+  f.classList.toggle('visible');
+  if (f.classList.contains('visible')) document.getElementById('new-task-name').focus();
+}
+
+function addTaskFromForm() {
+  const name = document.getElementById('new-task-name').value.trim();
+  if (!name) return;
+  const task = {
+    id: Date.now(),
+    name,
+    time: document.getElementById('new-task-time').value || '—',
+    priority: document.getElementById('new-task-priority').value,
+    tag: document.getElementById('new-task-tag').value.trim() || '',
+    done: false
+  };
+  tasks.push(task);
+  saveTasks(); render();
+  document.getElementById('new-task-name').value = '';
+  document.getElementById('new-task-time').value = '';
+  document.getElementById('new-task-tag').value = '';
+  document.getElementById('add-form').classList.remove('visible');
+}
+
+function showAI(text) {
+  const bubble = document.getElementById('ai-bubble');
+  document.getElementById('ai-text').textContent = text;
+  bubble.classList.add('visible');
+  setTimeout(() => bubble.classList.remove('visible'), 8000);
+}
+
+async function askAISuggestion() {
+  if (isLoadingAI) return;
+  isLoadingAI = true;
+  showAI('⏳ Analyse de votre journée...');
+  const pendingNames = tasks.filter(t=>!t.done).map(t=>t.name).join(', ') || 'aucune tâche en attente';
+  const doneCount = tasks.filter(t=>t.done).length;
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: 'Tu es un assistant de productivité personnel. Réponds TOUJOURS en français. Sois bref (max 2 phrases), motivant, et concret. Tu reçois la liste des tâches de la journée.',
+        messages: [{ role: 'user', content: `Tâches faites: ${doneCount}. Tâches restantes: ${pendingNames}. Donne un conseil de productivité personnalisé et motivant pour ma journée.` }]
+      })
+    });
+    const data = await resp.json();
+    const txt = data.content?.find(c=>c.type==='text')?.text || 'Continuez, vous êtes sur la bonne voie !';
+    showAI(txt);
+  } catch(e) {
+    showAI('Restez concentré(e) ! Chaque tâche accomplie vous rapproche de vos objectifs.');
+  }
+  isLoadingAI = false;
+}
+
+async function processVoiceCommand(cmd) {
+  cmd = cmd.trim();
+  if (!cmd) return;
+
+  const lower = cmd.toLowerCase();
+
+  if (lower.includes('ajouter') || lower.includes('créer') || lower.includes('nouvelle tâche') || lower.includes('add')) {
+    const match = cmd.match(/(?:ajouter?|créer?|nouvelle tâche)\s+(.+)/i);
+    const name = match ? match[1].trim() : cmd.replace(/^(ajouter|créer)\s+/i,'');
+    if (name) {
+      const priority = lower.includes('urgent') || lower.includes('important') ? 'high' : lower.includes('faible') ? 'low' : 'mid';
+      tasks.push({ id: Date.now(), name, time: '—', priority, tag: '', done: false });
+      saveTasks(); render();
+      showAI(`✅ Tâche ajoutée : "${name}"`);
+    }
+    return;
+  }
+
+  if (lower.includes('terminer') || lower.includes('finir') || lower.includes('complet') || lower.includes('cocher') || lower.includes('fait')) {
+    const kw = cmd.replace(/^(terminer|finir|compléter|cocher|marquer comme fait)\s+/i,'').trim();
+    const found = tasks.find(t => !t.done && t.name.toLowerCase().includes(kw.toLowerCase().split(' ').pop()));
+    if (found) { found.done = true; saveTasks(); render(); showAI(`✅ "${found.name}" marquée comme faite !`); }
+    else { showAI('Tâche non trouvée. Vérifiez le nom.'); }
+    return;
+  }
+
+  if (lower.includes('supprimer') || lower.includes('effacer') || lower.includes('enlever')) {
+    const kw = cmd.replace(/^(supprimer|effacer|enlever)\s+/i,'').trim();
+    const idx = tasks.findIndex(t => t.name.toLowerCase().includes(kw.toLowerCase().split(' ').pop()));
+    if (idx !== -1) { const n = tasks[idx].name; tasks.splice(idx,1); saveTasks(); render(); showAI(`🗑️ "${n}" supprimée.`); }
+    else { showAI('Tâche non trouvée.'); }
+    return;
+  }
+
+  if (lower.includes('combien') || lower.includes('résumé') || lower.includes('bilan') || lower.includes('statistique')) {
+    const done = tasks.filter(t=>t.done).length;
+    showAI(`📊 ${done} tâche(s) complétée(s) sur ${tasks.length}. ${tasks.length-done} restante(s).`);
+    return;
+  }
+
+  showAI('⏳ Analyse de la commande par l\'IA...');
+  try {
+    const context = tasks.map(t=>`- ${t.name} (${t.done?'fait':'en attente'}, ${t.priority})`).join('\n');
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: `Tu es un assistant de gestion de tâches. Réponds en français. Sois bref et direct. Tâches actuelles:\n${context}\nSi l'utilisateur veut ajouter/modifier/supprimer des tâches, dis-le clairement. Sinon réponds à sa question.`,
+        messages: [{ role: 'user', content: cmd }]
+      })
+    });
+    const data = await resp.json();
+    const txt = data.content?.find(c=>c.type==='text')?.text || 'Commande traitée.';
+    showAI(txt.slice(0,180));
+  } catch(e) {
+    showAI('Erreur de connexion IA. Vérifiez votre réseau.');
+  }
+}
+
+function toggleVoice() {
+  if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+    document.getElementById('voice-input').placeholder = 'Micro non supporté — tapez votre commande';
+    document.getElementById('voice-input').focus();
+    return;
+  }
+  if (isListening) {
+    stopListening();
+  } else {
+    startListening();
+  }
+}
+
+function startListening() {
+  const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recognition = new SpeechRec();
+  recognition.lang = 'fr-FR';
+  recognition.interimResults = true;
+  recognition.continuous = false;
+
+  recognition.onstart = () => {
+    isListening = true;
+    document.getElementById('mic-btn').classList.add('listening');
+    document.getElementById('mic-icon').className = 'ti ti-microphone-off mic-icon';
+    document.getElementById('voice-hint').textContent = 'À l\'écoute... parlez maintenant';
+    document.getElementById('voice-input').value = '';
+    document.getElementById('voice-input').placeholder = '🎙️ Écoute en cours...';
+  };
+
+  recognition.onresult = (e) => {
+    const transcript = Array.from(e.results).map(r=>r[0].transcript).join('');
+    document.getElementById('voice-input').value = transcript;
+  };
+
+  recognition.onend = () => {
+    const cmd = document.getElementById('voice-input').value;
+    stopListening();
+    if (cmd) processVoiceCommand(cmd);
+  };
+
+  recognition.onerror = () => stopListening();
+  recognition.start();
+}
+
+function stopListening() {
+  isListening = false;
+  if (recognition) { try { recognition.stop(); } catch(e){} recognition = null; }
+  document.getElementById('mic-btn').classList.remove('listening');
+  document.getElementById('mic-icon').className = 'ti ti-microphone mic-icon';
+  document.getElementById('voice-hint').textContent = 'appuyez sur le micro — commandez en français';
+  document.getElementById('voice-input').placeholder = 'Parlez ou tapez une commande...';
+}
+
+function handleTextCommand() {
+  const val = document.getElementById('voice-input').value.trim();
+  if (!val) return;
+  document.getElementById('voice-input').value = '';
+  processVoiceCommand(val);
+}
+
+document.getElementById('voice-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') handleTextCommand();
+});
+
+function initDate() {
+  const now = new Date();
+  const h = now.getHours();
+  const greet = h < 12 ? 'Bonjour' : h < 18 ? 'Bon après-midi' : 'Bonsoir';
+  document.getElementById('greeting-txt').textContent = greet;
+  document.getElementById('date-label').textContent = now.toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long' });
+}
+
+initDate();
+loadTasks();
+render();
+</script>
